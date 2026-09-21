@@ -1,66 +1,64 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, FileBarChart, Settings } from 'lucide-react';
+import { Terminal, Lock, UploadCloud, ChevronDown } from 'lucide-react';
 
 export function Sidebar() {
   return (
-    <div className="w-64 h-screen shrink-0 relative overflow-hidden text-zinc-300 border-r border-white/10 transition-all duration-500">
-      {/* Background Layers for Liquid Glass Black */}
-      <div className="absolute inset-0 pointer-events-none z-0">
-        {/* Base layer */}
-        <div className="absolute inset-0 bg-[#020202]" />
-        
-        {/* Fluid searchlight effect */}
-        <motion.div
-          animate={{ 
-            backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"],
-            opacity: [0.3, 0.5, 0.3]
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-          className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#1a1a1a_0%,_transparent_70%)] bg-[length:200%_200%]"
-        />
-
-        {/* Specular Highlight */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] via-transparent to-transparent" />
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-        {/* Shine Sweep */}
-        <motion.div
-          animate={{ left: ["-100%", "200%"] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", repeatDelay: 4 }}
-          className="absolute top-0 bottom-0 w-1/2 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent skew-x-[-25deg]"
-        />
+    <div className="w-[300px] h-screen shrink-0 bg-[#0a0a0a] border-r border-[#222] flex flex-col p-5">
+      
+      {/* Header / Logo */}
+      <div className="flex items-center gap-3 mb-10">
+        <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center border border-zinc-700 shadow-sm">
+          <Terminal size={18} className="text-zinc-300" />
+        </div>
+        <span className="text-xl font-bold text-zinc-100 tracking-tight">EvalOS</span>
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 flex flex-col h-full p-4">
-        <div className="flex items-center gap-3 px-2 py-4 mb-8">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#c3ff9b] to-[#a6c1ff] flex items-center justify-center shadow-[0_0_15px_rgba(195,255,155,0.3)]">
-            <LayoutDashboard className="w-4 h-4 text-black" />
+      <div className="flex-1 space-y-8 overflow-y-auto pr-2 custom-scrollbar">
+        
+        {/* Configuration Section */}
+        <section>
+          <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">Provider Setup</h2>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-zinc-300 mb-1.5">API Key (BYOK)</label>
+              <div className="relative">
+                <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <input 
+                  type="password" 
+                  placeholder="sk-..." 
+                  className="w-full bg-[#111] border border-[#333] rounded-md pl-9 pr-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-zinc-300 mb-1.5">Select Model</label>
+              <div className="relative">
+                <select className="w-full bg-[#111] border border-[#333] rounded-md pl-3 pr-9 py-2 text-sm text-zinc-200 appearance-none focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all">
+                  <option>GPT-4o</option>
+                  <option>Claude 3.5 Sonnet</option>
+                  <option>Llama 3</option>
+                </select>
+                <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+              </div>
+            </div>
           </div>
-          <span className="text-lg font-bold text-white tracking-wide">Eval Lite</span>
-        </div>
+        </section>
 
-        <nav className="flex-1 space-y-2">
-          <NavItem icon={<LayoutDashboard size={18} />} label="Dashboard" active />
-          <NavItem icon={<FileBarChart size={18} />} label="Evaluations" />
-        </nav>
+        {/* Dataset Section */}
+        <section>
+          <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">Test Data</h2>
+          
+          <div className="border border-dashed border-[#444] rounded-lg p-5 flex flex-col items-center justify-center bg-[#111] hover:bg-[#161616] transition-colors cursor-pointer group">
+            <UploadCloud size={20} className="text-zinc-500 mb-2 group-hover:text-zinc-300 transition-colors" />
+            <p className="text-sm text-zinc-300 font-medium">Upload CSV or JSON</p>
+          </div>
+          <p className="text-xs text-zinc-500 mt-2">Required columns: <code className="bg-[#222] px-1 py-0.5 rounded text-zinc-300">input</code>, <code className="bg-[#222] px-1 py-0.5 rounded text-zinc-300">expected_output</code></p>
+        </section>
 
-        <div className="mt-auto">
-          <NavItem icon={<Settings size={18} />} label="Settings" />
-        </div>
       </div>
     </div>
-  );
-}
-
-function NavItem({ icon, label, active = false }: { icon: React.ReactNode, label: string, active?: boolean }) {
-  return (
-    <button className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${
-      active ? 'bg-white/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]' : 'hover:bg-white/5 hover:text-white'
-    }`}>
-      {icon}
-      <span className="font-medium">{label}</span>
-    </button>
   );
 }
