@@ -3,9 +3,9 @@ import { useRef } from 'react';
 import Papa from 'papaparse';
 import { useEval } from '../context/EvalContext';
 
-export function Sidebar({ onTabChange }: { onTabChange?: (tab: 'prompt' | 'dataset') => void }) {
+export function Sidebar() {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { apiKey, setApiKey, selectedModel, setSelectedModel, setDatasetRows } = useEval();
+  const { apiKey, setApiKey, selectedModel, setSelectedModel, setDatasetRows, setActiveTab } = useEval();
   
   return (
     <div className="w-[300px] h-screen shrink-0 bg-[#0a0a0a] border-r border-[#222] flex flex-col p-5">
@@ -13,7 +13,7 @@ export function Sidebar({ onTabChange }: { onTabChange?: (tab: 'prompt' | 'datas
       {/* Header / Logo */}
       <div 
         className="flex items-center gap-3 mb-10 cursor-pointer hover:opacity-80 transition-opacity"
-        onClick={() => onTabChange?.('prompt')}
+        onClick={() => setActiveTab('prompt')}
       >
         <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center border border-zinc-700 shadow-sm">
           <Terminal size={18} className="text-zinc-300" />
@@ -116,7 +116,7 @@ export function Sidebar({ onTabChange }: { onTabChange?: (tab: 'prompt' | 'datas
                       ...row
                     }));
                     setDatasetRows(rows);
-                    onTabChange?.('dataset');
+                    setActiveTab('dataset');
                   },
                   error: (err) => console.error("Error parsing CSV:", err)
                 });

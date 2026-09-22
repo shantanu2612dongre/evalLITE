@@ -6,7 +6,7 @@ interface Props {
 }
 
 export function MainDashboardView({ onExampleSelect }: Props) {
-  const { evalResults } = useEval();
+  const { datasetRows, evalResults, referenceColumn, setActiveTab } = useEval();
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
@@ -16,7 +16,10 @@ export function MainDashboardView({ onExampleSelect }: Props) {
           <button className="pb-3 text-sm font-medium text-zinc-100 border-b-2 border-zinc-100 flex items-center gap-2">
             Examples <span className="bg-[#222] text-zinc-400 text-[10px] px-2 py-0.5 rounded-full">{evalResults.length}</span>
           </button>
-          <button className="pb-3 text-sm font-medium text-zinc-500 hover:text-zinc-300 transition-colors">
+          <button 
+            onClick={() => setActiveTab('prompt')}
+            className="pb-3 text-sm font-medium text-zinc-500 hover:text-zinc-300 transition-colors"
+          >
             Experiment Analysis
           </button>
         </div>
@@ -52,46 +55,49 @@ export function MainDashboardView({ onExampleSelect }: Props) {
                     <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider w-32">Example ID</th>
                     <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider w-1/4">reference_answer</th>
                     <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider w-24">Evaluations</th>
-                    <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider w-24">Annotations</th>
                     <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider w-1/4">ai_answer</th>
-                    <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider w-1/4">user_request</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#222] text-sm text-zinc-300">
-                  {evalResults.length === 0 ? (
+                  {datasetRows.length === 0 ? (
                     <tr className="hover:bg-[#111]/50 transition-colors">
-                      <td colSpan={6} className="py-8 px-4 text-center text-zinc-500 text-sm">
+                      <td colSpan={4} className="py-8 px-4 text-center text-zinc-500 text-sm">
                         No examples found.
                       </td>
                     </tr>
                   ) : (
-                    evalResults.map((result) => (
-                      <tr key={result.exampleId} className="hover:bg-[#111]/50 transition-colors">
-                        <td className="py-3 px-4">
-                          <button 
-                            onClick={() => onExampleSelect(result.exampleId)}
-                            className="inline-flex items-center px-2 py-1 rounded bg-[#222] hover:bg-[#333] text-zinc-300 text-xs font-mono transition-colors"
-                          >
-                            {result.exampleId.substring(0, 8)}...
-                          </button>
-                        </td>
-                        <td className="py-3 px-4 text-xs line-clamp-2">{result.referenceAnswer}</td>
-                        <td className="py-3 px-4">
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-[10px] font-medium border ${
-                            result.status === 'PASS' 
-                              ? 'bg-green-500/10 text-green-400 border-green-500/20' 
-                              : 'bg-red-500/10 text-red-400 border-red-500/20'
-                          }`}>
-                            {result.status}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <button className="text-zinc-500 hover:text-zinc-300 transition-colors"><Edit2 size={14} /></button>
-                        </td>
-                        <td className="py-3 px-4 text-xs text-zinc-400 line-clamp-2">{result.aiAnswer}</td>
-                        <td className="py-3 px-4 text-xs text-zinc-400 line-clamp-2" title={result.reason}>{result.reason}</td>
-                      </tr>
-                    ))
+                    datasetRows.map((row) => {
+                      const result = evalResults.find(r => r.exampleId === row._id);
+                      const refAns = referenceColumn ? row[referenceColumn] : (row.reference_answer || row.expected_output || '');
+                      
+                      return (
+                        <tr key={row._id} className="hover:bg-[#111]/50 transition-colors">
+                          <td className="py-3 px-4">
+                            <button 
+                              onClick={() => onExampleSelect(row._id)}
+                              className="inline-flex items-center px-2 py-1 rounded bg-[#222] hover:bg-[#333] text-zinc-300 text-xs font-mono transition-colors"
+                            >
+                              {row._id.substring(0, 8)}...
+                            </button>
+                          </td>
+                          <td className="py-3 px-4 text-xs line-clamp-2">{refAns || '-'}</td>
+                          <td className="py-3 px-4">
+                            {result ? (
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-[10px] font-medium border ${
+                                result.status === 'PASS' 
+                                  ? 'bg-green-500/10 text-green-400 border-green-500/20' 
+                                  : 'bg-red-500/10 text-red-400 border-red-500/20'
+                              }`}>
+                                {result.status}
+                              </span>
+                            ) : (
+                              <span className="text-zinc-600 text-xs">-</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-xs text-zinc-400 line-clamp-2">{result ? result.aiAnswer : (row.ai_answer || row.aiAnswer || row.ai_output || row.AI_output || row.AI_answer || '-')}</td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>

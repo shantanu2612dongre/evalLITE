@@ -47,10 +47,9 @@ export function UploadPreviewView({ onConfirm }: Props) {
           </div>
         </section>
 
-        {/* Preview Data */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-zinc-200">Preview Data (10 rows)</h3>
+            <h3 className="text-sm font-medium text-zinc-200">Preview Data ({datasetRows.length} rows)</h3>
             <button 
               onClick={() => { setDatasetRows([]); setReferenceColumn(''); }}
               className="flex items-center gap-2 text-xs font-medium text-red-400 hover:text-red-300 transition-colors"
@@ -59,7 +58,7 @@ export function UploadPreviewView({ onConfirm }: Props) {
             </button>
           </div>
           
-          <div className="rounded-xl border border-[#222] bg-[#0a0a0a] overflow-hidden overflow-x-auto">
+          <div className="rounded-xl border border-[#222] bg-[#0a0a0a] overflow-hidden overflow-x-auto overflow-y-auto max-h-[500px] custom-scrollbar">
             <table className="w-full text-left border-collapse min-w-[800px]">
               <thead>
                 <tr className="border-b border-[#222] bg-[#111]">
@@ -81,7 +80,7 @@ export function UploadPreviewView({ onConfirm }: Props) {
                     </td>
                   </tr>
                 ) : (
-                  datasetRows.slice(0, 10).map((row, i) => (
+                  datasetRows.map((row, i) => (
                     <tr key={row._id} className="hover:bg-[#111]/50 transition-colors">
                       <td className="py-3 px-4 text-xs text-zinc-500 font-mono">{i + 1}</td>
                       {columns.map(col => (

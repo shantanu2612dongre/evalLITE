@@ -44,6 +44,9 @@ interface EvalContextType {
   setIsRunning: (running: boolean) => void;
   progress: { current: number; total: number };
   setProgress: (prog: { current: number; total: number }) => void;
+
+  activeTab: 'prompt' | 'dataset';
+  setActiveTab: (tab: 'prompt' | 'dataset') => void;
 }
 
 const EvalContext = createContext<EvalContextType | undefined>(undefined);
@@ -63,6 +66,7 @@ export function EvalProvider({ children }: { children: ReactNode }) {
   const [evalResults, setEvalResults] = useState<EvalResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
+  const [activeTab, setActiveTab] = useState<'prompt' | 'dataset'>('prompt');
 
   return (
     <EvalContext.Provider value={{
@@ -76,7 +80,8 @@ export function EvalProvider({ children }: { children: ReactNode }) {
       referenceColumn, setReferenceColumn,
       evalResults, setEvalResults,
       isRunning, setIsRunning,
-      progress, setProgress
+      progress, setProgress,
+      activeTab, setActiveTab,
     }}>
       {children}
     </EvalContext.Provider>
