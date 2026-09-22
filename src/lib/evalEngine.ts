@@ -9,43 +9,109 @@ export function interpolatePrompt(prompt: string, row: DatasetRow): string {
   return interpolated;
 }
 
+import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
 export async function generateModelResponse(
   systemPrompt: string, 
   userPrompt: string | null,
   model: string, 
   apiKey: string
 ): Promise<{ text: string, latencyMs: number }> {
-  if (!apiKey) throw new Error('API Key is missing');
-
-  const start = Date.now();
-  
-  const messages = [];
-  if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
-  if (userPrompt) messages.push({ role: 'user', content: userPrompt });
-
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model,
-      messages,
-      temperature: 0.1
-    })
-  });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`API Error: ${res.status} ${err}`);
+  if (!apiKey && !model.includes('llama') && !model.includes('mistral')) {
+    throw new Error('API Key is missing');
   }
 
-  const data = await res.json();
-  const text = data.choices[0]?.message?.content || '';
-  const latencyMs = Date.now() - start;
+  const start = Date.now();
+  let aiAnswer = '';
 
-  return { text, latencyMs };
+  try {
+    // 1. OpenRouter (via OpenAI SDK)
+    if (model.includes('/')) {
+      const openai = new OpenAI({ 
+        apiKey, 
+        baseURL: 'https://openrouter.ai/api/v1',
+        dangerouslyAllowBrowser: true,
+        defaultHeaders: {
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'EvalOS'
+        }
+      });
+      const messages: any[] = [];
+      if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
+      if (userPrompt) messages.push({ role: 'user', content: userPrompt });
+
+      const res = await openai.chat.completions.create({
+        model: model,
+        messages: messages,
+        temperature: 0.1
+      });
+      aiAnswer = res.choices[0]?.message?.content || '';
+    }
+    // 2. OpenAI
+    else if (model.includes('gpt')) {
+      const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+      const messages: any[] = [];
+      if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
+      if (userPrompt) messages.push({ role: 'user', content: userPrompt });
+
+      const res = await openai.chat.completions.create({
+        model: model,
+        messages: messages,
+        temperature: 0.1
+      });
+      aiAnswer = res.choices[0]?.message?.content || '';
+    }
+    // 3. Anthropic
+    else if (model.includes('claude')) {
+      const anthropic = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
+      const messages: any[] = [];
+      if (userPrompt) messages.push({ role: 'user', content: userPrompt });
+      else messages.push({ role: 'user', content: 'Continue.' });
+
+      const res = await anthropic.messages.create({
+        model: model,
+        max_tokens: 1024,
+        messages: messages,
+        ...(systemPrompt ? { system: systemPrompt } : {})
+      });
+      aiAnswer = (res.content[0] as any)?.text || '';
+    }
+    // 4. Google
+    else if (model.includes('gemini')) {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const geminiModel = genAI.getGenerativeModel({ 
+        model: model,
+        ...(systemPrompt ? { systemInstruction: systemPrompt } : {})
+      });
+      const res = await geminiModel.generateContent(userPrompt || '');
+      aiAnswer = res.response.text();
+    }
+    // 5. Local Ollama Fallback
+    else {
+      const fullPrompt = `${systemPrompt ? systemPrompt + '\n\n' : ''}${userPrompt || ''}`;
+      const res = await fetch('http://localhost:11434/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: model,
+          prompt: fullPrompt,
+          stream: false
+        })
+      });
+      if (!res.ok) throw new Error('Local Ollama request failed');
+      const data = await res.json();
+      aiAnswer = data.response;
+    }
+
+    return {
+      text: aiAnswer,
+      latencyMs: Date.now() - start
+    };
+  } catch (error: any) {
+    throw new Error(`[API Error]: ${error.message}`);
+  }
 }
 
 export async function gradeOutput(

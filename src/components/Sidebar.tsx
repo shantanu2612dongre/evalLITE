@@ -57,6 +57,12 @@ export function Sidebar({ onTabChange }: { onTabChange?: (tab: 'prompt' | 'datas
                     <option value="gpt-4">gpt-4</option>
                     <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
                   </optgroup>
+                  <optgroup label="OpenRouter">
+                    <option value="meta-llama/llama-3.1-8b-instruct">Llama 3.1 8B</option>
+                    <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
+                    <option value="google/gemini-pro-1.5">Gemini 1.5 Pro</option>
+                    <option value="google/gemini-flash-1.5">Gemini 1.5 Flash</option>
+                  </optgroup>
                   <optgroup label="Anthropic">
                     <option value="claude-3-5-sonnet-20240620">claude-3-5-sonnet-20240620</option>
                     <option value="claude-3-opus-20240229">claude-3-opus-20240229</option>

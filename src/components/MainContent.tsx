@@ -165,33 +165,37 @@ Return a JSON object with:
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-[#222] bg-[#111]">
-                    <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Input Variable</th>
-                    <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Expected Output</th>
+                    <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Reference Answer</th>
                     <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Actual LLM Output</th>
+                    <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Reason</th>
                     <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider text-right">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#222] text-sm text-zinc-300">
-                  <tr className="hover:bg-[#111]/50 transition-colors">
-                    <td className="py-3 px-4 font-mono text-xs text-zinc-400">"What is capital of France?"</td>
-                    <td className="py-3 px-4">"Paris"</td>
-                    <td className="py-3 px-4 text-zinc-200">"The capital of France is Paris."</td>
-                    <td className="py-3 px-4 text-right">
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-medium bg-green-500/10 text-green-400 border border-green-500/20">
-                        Pass
-                      </span>
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-[#111]/50 transition-colors">
-                    <td className="py-3 px-4 font-mono text-xs text-zinc-400">"Explain quantum mechanics"</td>
-                    <td className="py-3 px-4">JSON object</td>
-                    <td className="py-3 px-4 text-red-400 font-mono text-xs">Error: Timeout</td>
-                    <td className="py-3 px-4 text-right">
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-medium bg-red-500/10 text-red-400 border border-red-500/20">
-                        Fail
-                      </span>
-                    </td>
-                  </tr>
+                  {context.evalResults.length === 0 ? (
+                    <tr className="hover:bg-[#111]/50 transition-colors">
+                      <td colSpan={4} className="py-8 px-4 text-center text-zinc-500 text-sm">
+                        No results yet. Click 'Run Batch Evaluation' to see a preview.
+                      </td>
+                    </tr>
+                  ) : (
+                    context.evalResults.slice(0, 5).map((result, i) => (
+                      <tr key={i} className="hover:bg-[#111]/50 transition-colors">
+                        <td className="py-3 px-4 text-xs text-zinc-400 line-clamp-2">{result.referenceAnswer || '-'}</td>
+                        <td className="py-3 px-4 text-xs text-zinc-200 line-clamp-2">{result.aiAnswer}</td>
+                        <td className="py-3 px-4 text-xs text-zinc-500 line-clamp-2">{result.reason}</td>
+                        <td className="py-3 px-4 text-right">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-[10px] font-medium border ${
+                            result.status === 'PASS' 
+                              ? 'bg-green-500/10 text-green-400 border-green-500/20' 
+                              : 'bg-red-500/10 text-red-400 border-red-500/20'
+                          }`}>
+                            {result.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

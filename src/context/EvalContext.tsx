@@ -51,20 +51,7 @@ const EvalContext = createContext<EvalContextType | undefined>(undefined);
 export function EvalProvider({ children }: { children: ReactNode }) {
   const [apiKey, setApiKey] = useState('');
   const [selectedModel, setSelectedModel] = useState('gpt-4o-mini');
-  const [systemPrompt, setSystemPrompt] = useState(`You are an impartial evaluator grading a customer support response.
-
-[Evaluation Criteria]
-- PASS: The response is empathetic, courteous, professional, and directly addresses the user's issue.
-- FAIL: The response is robotic, rude, dismissive, or uses corporate jargon unnecessarily.
-
-[Input Data]
-Customer Request: {{user_request}}
-AI Response: {{ai_answer}}
-
-[Output Instruction]
-Return a JSON object with:
-- "verdict": "PASS" or "FAIL"
-- "reason": A one-sentence explanation of why the score was given.`);
+  const [systemPrompt, setSystemPrompt] = useState('');
   
   const [evalCriteria, setEvalCriteria] = useState('Exact Match');
   const [targetValue, setTargetValue] = useState('');
