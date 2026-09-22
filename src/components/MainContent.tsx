@@ -1,9 +1,18 @@
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Play, ChevronDown } from 'lucide-react';
+import { useEval } from '../context/EvalContext';
+import { runBatchEvaluation } from '../lib/evalEngine';
 
 export function MainContent() {
-  const [criteria, setCriteria] = useState('Exact Match');
+  const context = useEval();
+  const { 
+    systemPrompt, setSystemPrompt,
+    evalCriteria, setEvalCriteria,
+    targetValue, setTargetValue,
+    judgeRubric, setJudgeRubric,
+    datasetRows, isRunning, setIsRunning,
+    progress, setProgress
+  } = context;
 
   return (
     <div className="flex-1 flex flex-col h-screen overflow-hidden bg-[#000]">
@@ -18,7 +27,16 @@ export function MainContent() {
               <p className="text-zinc-500">Draft your prompt and set evaluation criteria.</p>
             </div>
             
-            <button className="relative group overflow-hidden rounded-full px-8 py-3.5 font-semibold text-black shadow-lg">
+            <button 
+              onClick={async () => {
+                if (isRunning || datasetRows.length === 0) return;
+                setIsRunning(true);
+                await runBatchEvaluation(context, (curr, tot) => setProgress({ current: curr, total: tot }));
+                setIsRunning(false);
+              }}
+              disabled={isRunning || datasetRows.length === 0}
+              className={`relative group overflow-hidden rounded-full px-8 py-3.5 font-semibold text-black shadow-lg ${isRunning || datasetRows.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
               {/* Vibrant Liquid Glass Gradient */}
               <div className="absolute inset-0 bg-gradient-to-r from-[#c3ff9b] via-[#b6f1ff] to-[#a6c1ff] bg-[length:200%_200%] animate-[gradient_3s_ease_infinite] group-hover:scale-105 transition-transform duration-500" />
               
@@ -37,7 +55,7 @@ export function MainContent() {
 
               <span className="relative z-10 flex items-center gap-2">
                 <Play className="w-4 h-4 fill-black" />
-                Run Batch Evaluation (0/100)
+                {isRunning ? `Running (${progress.current}/${progress.total})` : `Run Batch Evaluation (${datasetRows.length})`}
               </span>
             </button>
           </header>
@@ -47,6 +65,8 @@ export function MainContent() {
             <label className="text-sm font-medium text-zinc-300">System Prompt</label>
             <div className="rounded-xl border border-[#222] bg-[#0a0a0a] overflow-hidden focus-within:border-zinc-500 focus-within:ring-1 focus-within:ring-zinc-500 transition-all">
               <textarea 
+                value={systemPrompt}
+                onChange={(e) => setSystemPrompt(e.target.value)}
                 className="w-full h-[250px] bg-transparent p-5 text-zinc-200 placeholder-zinc-600 resize-none outline-none font-mono text-sm leading-relaxed"
                 placeholder={`You are an impartial evaluator grading a customer support response.
 
@@ -75,8 +95,8 @@ Return a JSON object with:
                 <label className="block text-sm font-medium text-zinc-400 mb-2">Evaluation Criteria</label>
                 <div className="relative max-w-md">
                   <select 
-                    value={criteria}
-                    onChange={(e) => setCriteria(e.target.value)}
+                    value={evalCriteria}
+                    onChange={(e) => setEvalCriteria(e.target.value)}
                     className="w-full bg-[#111] border border-[#333] rounded-md pl-4 pr-10 py-2.5 text-sm text-zinc-200 appearance-none focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                   >
                     <option value="Exact Match">Exact Match</option>
@@ -90,34 +110,40 @@ Return a JSON object with:
 
               {/* Conditional Rendering */}
               <div className="max-w-md">
-                {criteria === 'Exact Match' && (
+                {evalCriteria === 'Exact Match' && (
                   <div className="p-4 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm">
                     Info: The AI output will be compared strictly against the reference_answer column in your dataset.
                   </div>
                 )}
 
-                {criteria === 'Contains Keyword' && (
+                {evalCriteria === 'Contains Keyword' && (
                   <div>
                     <label className="block text-sm font-medium text-zinc-400 mb-2">Target Keyword</label>
                     <input 
                       type="text" 
+                      value={targetValue}
+                      onChange={(e) => setTargetValue(e.target.value)}
                       placeholder="e.g., Refund, Error, Success"
                       className="w-full bg-[#111] border border-[#333] rounded-md px-4 py-2.5 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                     />
                   </div>
                 )}
 
-                {criteria === 'Valid JSON' && (
+                {evalCriteria === 'Valid JSON' && (
                   <div className="p-4 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm">
                     Info: Evaluates whether the AI's response can be successfully parsed as valid JSON.
                   </div>
                 )}
 
-                {criteria === 'LLM-as-a-Judge' && (
+                {evalCriteria === 'LLM-as-a-Judge' && (
                   <div>
                     <label className="block text-sm font-medium text-zinc-400 mb-2">Judge Rubric</label>
                     <div className="relative">
-                      <select className="w-full bg-[#111] border border-[#333] rounded-md pl-4 pr-10 py-2.5 text-sm text-zinc-200 appearance-none focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all">
+                      <select 
+                        value={judgeRubric}
+                        onChange={(e) => setJudgeRubric(e.target.value)}
+                        className="w-full bg-[#111] border border-[#333] rounded-md pl-4 pr-10 py-2.5 text-sm text-zinc-200 appearance-none focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                      >
                         <option>Tone & Brand Voice</option>
                         <option>Hallucination Check</option>
                         <option>Custom Prompt</option>

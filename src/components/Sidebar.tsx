@@ -1,8 +1,11 @@
 import { Terminal, Lock, UploadCloud, ChevronDown } from 'lucide-react';
 import { useRef } from 'react';
+import Papa from 'papaparse';
+import { useEval } from '../context/EvalContext';
 
 export function Sidebar({ onTabChange }: { onTabChange?: (tab: 'prompt' | 'dataset') => void }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { apiKey, setApiKey, selectedModel, setSelectedModel, setDatasetRows } = useEval();
   
   return (
     <div className="w-[300px] h-screen shrink-0 bg-[#0a0a0a] border-r border-[#222] flex flex-col p-5">
@@ -32,6 +35,8 @@ export function Sidebar({ onTabChange }: { onTabChange?: (tab: 'prompt' | 'datas
                 <input
                   type="password"
                   placeholder="sk-..."
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
                   className="w-full bg-[#111] border border-[#333] rounded-md pl-9 pr-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all"
                 />
               </div>
@@ -40,7 +45,11 @@ export function Sidebar({ onTabChange }: { onTabChange?: (tab: 'prompt' | 'datas
             <div>
               <label className="block text-sm font-medium text-zinc-300 mb-1.5">Select Model</label>
               <div className="relative">
-                <select className="w-full bg-[#111] border border-[#333] rounded-md pl-3 pr-9 py-2 text-sm text-zinc-200 appearance-none focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all">
+                <select 
+                  value={selectedModel}
+                  onChange={(e) => setSelectedModel(e.target.value)}
+                  className="w-full bg-[#111] border border-[#333] rounded-md pl-3 pr-9 py-2 text-sm text-zinc-200 appearance-none focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all"
+                >
                   <optgroup label="OpenAI">
                     <option value="gpt-4o">gpt-4o</option>
                     <option value="gpt-4o-mini">gpt-4o-mini</option>
@@ -90,8 +99,21 @@ export function Sidebar({ onTabChange }: { onTabChange?: (tab: 'prompt' | 'datas
             className="hidden"
             ref={fileInputRef}
             onChange={(e) => {
-              if (e.target.files && e.target.files.length > 0) {
-                onTabChange?.('dataset');
+              const file = e.target.files?.[0];
+              if (file) {
+                Papa.parse(file, {
+                  header: true,
+                  skipEmptyLines: true,
+                  complete: (results) => {
+                    const rows = results.data.map((row: any) => ({
+                      _id: `eval_${Math.random().toString(36).substr(2, 9)}`,
+                      ...row
+                    }));
+                    setDatasetRows(rows);
+                    onTabChange?.('dataset');
+                  },
+                  error: (err) => console.error("Error parsing CSV:", err)
+                });
               }
             }}
           />
