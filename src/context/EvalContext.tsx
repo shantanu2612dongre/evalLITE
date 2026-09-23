@@ -9,6 +9,7 @@ export interface DatasetRow {
 export interface EvalResult {
   exampleId: string;
   inputData: any;
+  inputVal: string;
   aiAnswer: string;
   referenceAnswer: string;
   status: 'PASS' | 'FAIL';
