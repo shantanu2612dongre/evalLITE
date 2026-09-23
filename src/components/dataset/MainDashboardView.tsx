@@ -1,4 +1,4 @@
-import { Search, ChevronDown, Edit2 } from 'lucide-react';
+import { Search, ChevronDown } from 'lucide-react';
 import { useEval } from '../../context/EvalContext';
 
 interface Props {
