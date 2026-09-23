@@ -182,19 +182,20 @@ export function MainContent() {
             </div>
             
             <div className="rounded-xl border border-[#222] bg-[#0a0a0a] overflow-hidden">
-              <table className="w-full text-left border-collapse">
+              <table className="w-full text-left border-collapse table-fixed">
                 <thead>
                   <tr className="border-b border-[#222] bg-[#111]">
-                    <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Reference Answer</th>
-                    <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Actual LLM Output</th>
-                    <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Reason</th>
-                    <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider text-right">Status</th>
+                    <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider w-1/5">Input</th>
+                    <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider w-1/5">Expected Output</th>
+                    <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider w-1/5">Actual LLM Output</th>
+                    <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider w-1/5">Reason</th>
+                    <th className="py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider w-1/5 text-right">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#222] text-sm text-zinc-300">
                   {context.evalResults.length === 0 && !isRunning ? (
                     <tr>
-                      <td colSpan={4} className="py-8 px-4 text-center text-zinc-500 text-sm">
+                      <td colSpan={5} className="py-8 px-4 text-center text-zinc-500 text-sm">
                         No results yet. Click 'Run Batch Evaluation' to see a preview.
                       </td>
                     </tr>
@@ -208,9 +209,18 @@ export function MainContent() {
                           transition={{ duration: 0.3, delay: i * 0.05 }}
                           className="hover:bg-[#111]/50 transition-colors"
                         >
-                          <td className="py-3 px-4 text-xs text-zinc-400 line-clamp-2">{result.referenceAnswer || '-'}</td>
-                          <td className="py-3 px-4 text-xs text-zinc-200 line-clamp-2">{result.aiAnswer}</td>
-                          <td className="py-3 px-4 text-xs text-zinc-500 line-clamp-2">{result.reason}</td>
+                          <td className="py-3 px-4 text-xs text-zinc-400 truncate max-w-0">
+                            <span className="block truncate" title={result.inputVal || '-'}>{result.inputVal || '-'}</span>
+                          </td>
+                          <td className="py-3 px-4 text-xs text-zinc-400 truncate max-w-0">
+                            <span className="block truncate" title={result.referenceAnswer || '-'}>{result.referenceAnswer || '-'}</span>
+                          </td>
+                          <td className="py-3 px-4 text-xs text-zinc-200 truncate max-w-0">
+                            <span className="block truncate" title={result.aiAnswer}>{result.aiAnswer}</span>
+                          </td>
+                          <td className="py-3 px-4 text-xs text-zinc-500 truncate max-w-0">
+                            <span className="block truncate" title={result.reason}>{result.reason}</span>
+                          </td>
                           <td className="py-3 px-4 text-right">
                             <span className={`inline-flex items-center px-2 py-1 rounded-full text-[10px] font-medium border ${
                               result.status === 'PASS' 
@@ -225,7 +235,7 @@ export function MainContent() {
                       {isRunning && context.evalResults.length < 5 && (
                         Array.from({ length: Math.min(3, 5 - context.evalResults.length) }).map((_, i) => (
                           <tr key={`pending-${i}`} className="border-t border-[#222]">
-                            <td colSpan={4} className="py-4 px-4">
+                            <td colSpan={5} className="py-4 px-4">
                               <motion.div
                                 animate={{ opacity: [0.2, 0.5, 0.2] }}
                                 transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.25 }}

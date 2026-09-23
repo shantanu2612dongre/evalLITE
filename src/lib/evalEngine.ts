@@ -27,8 +27,26 @@ export async function generateModelResponse(
   let aiAnswer = '';
 
   try {
-    // 1. OpenRouter (via OpenAI SDK)
-    if (model.includes('/')) {
+    // 1. Groq — gsk_ key always wins, regardless of model name format
+    if (apiKey.startsWith('gsk_')) {
+      const groq = new OpenAI({ 
+        apiKey, 
+        baseURL: 'https://api.groq.com/openai/v1',
+        dangerouslyAllowBrowser: true
+      });
+      const messages: any[] = [];
+      if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
+      if (userPrompt) messages.push({ role: 'user', content: userPrompt });
+
+      const res = await groq.chat.completions.create({
+        model: model,
+        messages: messages,
+        temperature: 0.1
+      });
+      aiAnswer = res.choices[0]?.message?.content || '';
+    }
+    // 2. OpenRouter — model IDs contain '/' (e.g. meta-llama/llama-3...)
+    else if (model.includes('/')) {
       const openai = new OpenAI({ 
         apiKey, 
         baseURL: 'https://openrouter.ai/api/v1',
@@ -49,7 +67,7 @@ export async function generateModelResponse(
       });
       aiAnswer = res.choices[0]?.message?.content || '';
     }
-    // 2. OpenAI
+    // 3. OpenAI — gpt model + sk- key
     else if (model.includes('gpt')) {
       const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
       const messages: any[] = [];
@@ -212,7 +230,13 @@ export async function runBatchEvaluation(
 
     try {
       const prompt = interpolatePrompt(systemPrompt, row);
-      const referenceAnswer = referenceColumn ? (row[referenceColumn] || '') : '';
+      
+      // Standardized fallback chains for reference and input
+      const referenceAnswer = referenceColumn 
+        ? (row[referenceColumn] || '') 
+        : (row.expected_output || row.reference_answer || row.expectedOutput || '');
+      
+      const inputVal = row.input || row.user_request || row.userRequest || row.query || row.question || '';
       
       const { text: aiAnswer, latencyMs } = await generateModelResponse(prompt, null, selectedModel, apiKey);
       
@@ -223,6 +247,7 @@ export async function runBatchEvaluation(
       results.push({
         exampleId: row._id,
         inputData: row,
+        inputVal,
         aiAnswer,
         referenceAnswer,
         status: grade.status,
@@ -235,11 +260,14 @@ export async function runBatchEvaluation(
       setEvalResults([...results]);
 
     } catch (e: any) {
+      const referenceAnswer = referenceColumn ? String(row[referenceColumn] || '') : (row.expected_output || row.reference_answer || '');
+      const inputVal = row.input || row.user_request || '';
       results.push({
         exampleId: row._id,
         inputData: row,
+        inputVal,
         aiAnswer: 'ERROR',
-        referenceAnswer: referenceColumn ? String(row[referenceColumn]) : '',
+        referenceAnswer,
         status: 'FAIL',
         score: 0,
         reason: e.message,

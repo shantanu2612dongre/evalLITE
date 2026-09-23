@@ -63,6 +63,12 @@ export function Sidebar() {
                     <option value="google/gemini-pro-1.5">Gemini 1.5 Pro</option>
                     <option value="google/gemini-flash-1.5">Gemini 1.5 Flash</option>
                   </optgroup>
+                  <optgroup label="Groq (gsk_ key)">
+                    <option value="llama-3.3-70b-versatile">Llama 3.3 70B (versatile)</option>
+                    <option value="llama-3.1-8b-instant">Llama 3.1 8B (instant)</option>
+                    <option value="openai/gpt-oss-120b">GPT-OSS 120B</option>
+                    <option value="openai/gpt-oss-20b">GPT-OSS 20B</option>
+                  </optgroup>
                   <optgroup label="Anthropic">
                     <option value="claude-3-5-sonnet-20240620">claude-3-5-sonnet-20240620</option>
                     <option value="claude-3-opus-20240229">claude-3-opus-20240229</option>
